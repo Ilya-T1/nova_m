@@ -1,0 +1,7 @@
+target/
+dbt_packages/
+dbt_modules/
+logs/
+.env
+*.log
+.DS_Store

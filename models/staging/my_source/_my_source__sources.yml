@@ -1,0 +1,30 @@
+version: 2
+
+sources:
+  - name: my_source                      # rename to your actual source system, e.g. `salesforce`
+    database: raw                        # rename to the Snowflake database that holds raw data
+    schema: my_source                    # rename to the raw schema, e.g. `raw_salesforce`
+    description: >
+      Raw data landed from the source system. Replace this with a real description
+      of where the data comes from (e.g. "Fivetran sync from Salesforce, hourly").
+
+    loaded_at_field: _loaded_at          # column used for freshness checks, if present
+    freshness:
+      warn_after: {count: 24, period: hour}
+      error_after: {count: 48, period: hour}
+
+    tables:
+      - name: my_table                   # rename to the actual raw table name
+        description: "One row per record. Replace with the real grain of this table."
+        columns:
+          - name: id
+            description: "Primary key of the source table."
+            data_tests:
+              - unique
+              - not_null
+          - name: status
+            description: "Raw status code as it comes from the source system."
+          - name: created_at
+            description: "Timestamp the record was created in the source system."
+          - name: updated_at
+            description: "Timestamp the record was last updated in the source system."

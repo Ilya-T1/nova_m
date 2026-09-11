@@ -1,0 +1,41 @@
+name: 'nova_m'
+version: '1.0.0'
+config-version: 2
+
+# This setting configures which "profile" dbt uses for this project.
+# Profiles (connection details) live outside the repo in ~/.dbt/profiles.yml.
+profile: 'nova_m'
+
+# These configure the locations of the .sql and .yml files that make up
+# this dbt project.
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Global variables available to all models via {{ var('name') }}
+vars: {}
+
+models:
+  nova_m:
+    # Staging models: 1:1 with source tables, light renaming/casting only.
+    # Materialized as views so they stay cheap and always reflect raw data.
+    staging:
+      +materialized: view
+      +schema: staging
+
+    # Marts: business-facing, modeled entities built on top of staging.
+    # Materialized as tables (or incremental, per-model) for query performance.
+    marts:
+      +materialized: table
+      +schema: marts
+
+seeds:
+  nova_m:
+    +schema: seeds
