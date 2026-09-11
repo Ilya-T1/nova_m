@@ -7,14 +7,14 @@ A dbt project targeting Snowflake.
 ```
 models/
   staging/
-    tableau_superstore/
-      _tableau_superstore__sources.yml   # source table declaration + column docs/tests
-      _tableau_superstore__models.yml    # docs/tests for the staging model
-      stg_tableau_superstore__orders.sql
+    my_source/
+      _my_source__sources.yml   # source table declarations + freshness
+      _my_source__models.yml    # docs/tests for staging models
+      stg_my_source__my_table.sql
   marts/
-    sales/
-      _sales__models.yml                 # docs/tests for the mart model
-      fct_order_lines.sql
+    core/
+      _core__models.yml         # docs/tests for mart models
+      dim_my_table.sql
 ```
 
 - **staging**: 1:1 with a raw source table. Renaming/casting only, no joins or
@@ -23,10 +23,10 @@ models/
   models. Materialized as `table` (switch to `incremental` per-model as
   tables grow).
 
-`tableau_superstore` / `fct_order_lines` are built against the real
-`DATA_ANALYTICS_PLATFORM.TABLEAU_SUPERSTORE."Sample Superstore 2023"` table
-(one row per order line item). Duplicate this same staging → marts pattern
-for each additional source or mart you add.
+Everything under `models/staging/my_source/` is a placeholder — rename
+`my_source` / `my_table` (folder, source name, model names, `database`/
+`schema` in the sources file) to match your real Snowflake raw data, then
+duplicate the pattern for each additional source or mart.
 
 ## Local setup
 

@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: dim_my_table
+    description: >
+      Business-facing dimension built on top of `stg_my_source__my_table`.
+      One row per `my_table_id`, with human-readable status labels applied.
+    columns:
+      - name: my_table_id
+        description: "Primary key of this dimension."
+        data_tests:
+          - unique
+          - not_null
+      - name: status_raw
+        description: "Untransformed status code, carried through from staging."
+      - name: status_display
+        description: "Human-readable status label derived from `status_raw`."
+        data_tests:
+          - accepted_values:
+              values: ['Active', 'Inactive', 'Unknown']
+      - name: created_at
+        description: "When the record was created in the source system."
+      - name: updated_at
+        description: "When the record was last updated in the source system."
