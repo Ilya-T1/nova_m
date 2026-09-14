@@ -49,7 +49,7 @@ Then:
 ```bash
 pip install dbt-snowflake
 dbt debug        # verify the connection
-dbt deps         # install packages, once packages.yml has any
+dbt deps         # install packages declared in packages.yml (dbt_utils, dbt_expectations)
 dbt seed         # load seeds/, if any
 dbt run          # build models
 dbt test         # run schema + data tests
