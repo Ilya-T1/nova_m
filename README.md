@@ -7,14 +7,8 @@ A dbt project targeting Snowflake.
 ```
 models/
   staging/
-    my_source/
-      _my_source__sources.yml   # source table declarations + freshness
-      _my_source__models.yml    # docs/tests for staging models
-      stg_my_source__my_table.sql
-  marts/
-    core/
-      _core__models.yml         # docs/tests for mart models
-      dim_my_table.sql
+    nm_raw/
+      _nm_raw__sources.yml      # source table declarations (DBT_LEARN_ILYA.NM_RAW)
 ```
 
 - **staging**: 1:1 with a raw source table. Renaming/casting only, no joins or
@@ -23,10 +17,10 @@ models/
   models. Materialized as `table` (switch to `incremental` per-model as
   tables grow).
 
-Everything under `models/staging/my_source/` is a placeholder — rename
-`my_source` / `my_table` (folder, source name, model names, `database`/
-`schema` in the sources file) to match your real Snowflake raw data, then
-duplicate the pattern for each additional source or mart.
+`nm_raw` is the real source (raw_channels, raw_properties, raw_room_types,
+raw_maintenance, raw_reservations). Staging models (`stg_nm_raw__*.sql`) and
+marts still need to be added on top of it — duplicate the pattern from an
+existing source when you add another one.
 
 ## Local setup
 

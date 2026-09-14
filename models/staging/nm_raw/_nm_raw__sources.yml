@@ -25,6 +25,6 @@ sources:
         columns:
           - name: reservation_id
             description: "Primary key for reservations."
-            tests:
+            data_tests:
               - not_null
               - unique
