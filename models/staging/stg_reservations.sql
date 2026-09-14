@@ -28,7 +28,13 @@ cleaned as (
         initcap(trim(cancellation_policy))              as cancellation_policy,
         cancellation_deadline_days,
 
-        upper(trim(status))                             as status,
+        case upper(trim(status))
+            when 'NS'        then 'NO_SHOW'
+            when 'NO_SHOW'   then 'NO_SHOW'
+            when 'CONFIRMED' then 'CONFIRMED'
+            when 'CANCELLED' then 'CANCELLED'
+            else upper(trim(status))
+        end                                             as status,
         case
             when upper(trim(status)) = 'CANCELLED'      then true
             else false

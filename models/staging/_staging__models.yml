@@ -1,0 +1,231 @@
+version: 2
+
+# TODO: once thresholds are agreed, add dbt_expectations range checks
+# (expect_column_values_to_be_between) on the derived numeric columns below:
+# stg_reservations: nights_stayed, lead_time_days, total_amount, daily_rate
+# stg_properties: star_rating, total_rooms
+
+models:
+  - name: stg_channels
+    description: >
+      Standardized distribution channel categories. One row per channel.
+      Source of truth for channel labels used across all reservation analysis.
+    columns:
+      - name: channel_category_id
+        description: "Primary key."
+        data_tests:
+          - not_null
+          - unique
+      - name: channel_category
+        description: "Standardized channel name. OTA preserved as acronym; others title-cased."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Direct', 'OTA', 'Tour Operator', 'Corporate']
+
+  - name: stg_properties
+    description: >
+      Cleaned property master data. One row per Nova M property.
+      Property name derived as 'Nova M [City] [Type]' — no name column exists in raw source.
+    columns:
+      - name: property_id
+        description: "Primary key."
+        data_tests:
+          - not_null
+          - unique
+      - name: property_name
+        description: "Derived display name concatenated as 'Nova M [City] [Property Type]'."
+        data_tests:
+          - not_null
+          - unique
+      - name: country
+        description: "Country standardized to uppercase."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['AUSTRIA', 'ITALY', 'SLOVENIA']
+      - name: city
+        description: "City name standardized to title case."
+        data_tests:
+          - not_null
+      - name: zip_code
+        description: "Postal code cast from numeric to string to preserve leading zeros."
+      - name: property_type
+        description: "Property category standardized to title case."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Hotel', 'Apartments', 'Resort']
+      - name: star_rating
+        description: "Official star rating. Resorts are 5-star; Hotels and Apartments are 4-star."
+        data_tests:
+          - not_null
+      - name: total_rooms
+        description: "Total room inventory across all room types for this property."
+        data_tests:
+          - not_null
+      - name: seasonality
+        description: >
+          Operating season decoded from source boolean (source column is non-nullable).
+          Apr-Oct = seasonal (Alpine properties); All = year-round (Adriatic and Slovenian properties).
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Apr-Oct', 'All']
+
+  - name: stg_room_types
+    description: >
+      Room type definitions per property. Grain is one row per room type per property.
+      Drives capacity calculations in the intermediate layer.
+    columns:
+      - name: room_type_id
+        description: "Primary key."
+        data_tests:
+          - not_null
+          - unique
+      - name: property_id
+        description: "Foreign key to stg_properties."
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_properties')
+              field: property_id
+      - name: room_type_name
+        description: "Room type label standardized to title case."
+        data_tests:
+          - not_null
+      - name: max_occupancy
+        description: "Maximum number of guests permitted in this room type."
+        data_tests:
+          - not_null
+      - name: room_count
+        description: >
+          Number of physical rooms of this type at this property.
+          Used to calculate available room nights in capacity models.
+        data_tests:
+          - not_null
+
+  - name: stg_maintenance
+    description: >
+      Maintenance blocks recording rooms taken out of service by date range.
+      Used in the intermediate layer to reduce available capacity during blocked periods.
+    columns:
+      - name: maintenance_block_id
+        description: "Primary key."
+        data_tests:
+          - not_null
+          - unique
+      - name: property_id
+        description: "Foreign key to stg_properties."
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_properties')
+              field: property_id
+      - name: room_type_id
+        description: "Foreign key to stg_room_types."
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_room_types')
+              field: room_type_id
+      - name: start_date
+        description: "First date of the maintenance block, inclusive."
+        data_tests:
+          - not_null
+      - name: end_date
+        description: "Last date of the maintenance block, exclusive."
+        data_tests:
+          - not_null
+      - name: block_duration_days
+        description: "Derived: DATEDIFF(end_date, start_date)."
+      - name: rooms_out_of_service
+        description: "Number of rooms of this type blocked during the maintenance period."
+        data_tests:
+          - not_null
+
+  - name: stg_reservations
+    description: >
+      Cleaned and standardized reservation records. One row per reservation.
+      Central fact source for all revenue and occupancy analysis.
+      Cancelled reservations are retained and flagged via is_cancelled —
+      they are excluded in the intermediate layer for stay-night calculations.
+    columns:
+      - name: reservation_id
+        description: "Primary key."
+        data_tests:
+          - not_null
+          - unique
+      - name: property_id
+        description: "Foreign key to stg_properties."
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_properties')
+              field: property_id
+      - name: room_type_id
+        description: "Foreign key to stg_room_types."
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_room_types')
+              field: room_type_id
+      - name: channel_category_id
+        description: "Foreign key to stg_channels."
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_channels')
+              field: channel_category_id
+      - name: booking_date
+        description: "Date the reservation was made."
+        data_tests:
+          - not_null
+      - name: check_in_date
+        description: "Scheduled or actual check-in date."
+        data_tests:
+          - not_null
+      - name: check_out_date
+        description: "Scheduled or actual check-out date."
+        data_tests:
+          - not_null
+      - name: cancellation_date
+        description: "Date the reservation was cancelled. Null for non-cancelled reservations."
+      - name: nights_stayed
+        description: >
+          Derived: DATEDIFF(check_out_date, check_in_date).
+          Calculated from dates rather than a stored column for reliability.
+        data_tests:
+          - not_null
+      - name: lead_time_days
+        description: >
+          Derived: DATEDIFF(check_in_date, booking_date).
+          Days between booking and arrival. Key metric for booking pattern analysis.
+      - name: num_guests
+        description: "Number of guests. May be null — deliberate data quality issue in source."
+      - name: meal_plan
+        description: "Meal plan standardized to title case."
+      - name: has_breakfast
+        description: "Derived boolean: true when meal_plan contains 'Breakfast'."
+      - name: cancellation_policy
+        description: "Cancellation policy standardized to title case."
+      - name: cancellation_deadline_days
+        description: "Days before check-in within which cancellation is penalty-free."
+      - name: status
+        description: >
+          Reservation status standardized to uppercase.
+          NS abbreviation (~30% of No Show rows in source) decoded to NO_SHOW in staging.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['CONFIRMED', 'CANCELLED', 'NO_SHOW']
+      - name: is_cancelled
+        description: "Derived boolean: true when status = CANCELLED."
+      - name: total_amount
+        description: "Total reservation revenue in EUR."
+        data_tests:
+          - not_null
+      - name: daily_rate
+        description: >
+          Derived: total_amount / nights_stayed. Equivalent to ADR at reservation level.
+          Null when nights_stayed is zero or dates are invalid.
