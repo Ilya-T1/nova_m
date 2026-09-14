@@ -30,6 +30,13 @@ models:
       +materialized: view
       +schema: staging
 
+    # Intermediate models: joined/grain-resolved building blocks for marts
+    # (date-spine explosions, multi-staging-model joins). Not meant to be
+    # queried directly by BI tools.
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+
     # Marts: business-facing, modeled entities built on top of staging.
     # Materialized as tables (or incremental, per-model) for query performance.
     marts:

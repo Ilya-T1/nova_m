@@ -1,0 +1,113 @@
+version: 2
+
+models:
+  - name: int_reservation_nights
+    description: >
+      Non-cancelled reservations (CONFIRMED + NO_SHOW) exploded to one row
+      per stay night, enriched with property/room type/channel descriptors.
+      Cancelled reservations are excluded here and handled directly by
+      mart_cancellation from stg_reservations.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - reservation_id
+            - stay_date
+    columns:
+      - name: reservation_id
+        description: "Reservation this stay night belongs to. Not unique alone -- see the composite grain test above."
+        data_tests:
+          - not_null
+      - name: stay_date
+        description: "One calendar night of the stay. check_out_date itself is excluded (not a stay night)."
+        data_tests:
+          - not_null
+      - name: property_id
+        description: "Foreign key to stg_properties / dim_property."
+        data_tests:
+          - not_null
+      - name: room_type_id
+        description: "Foreign key to stg_room_types."
+        data_tests:
+          - not_null
+      - name: channel_id
+        description: "Foreign key to stg_channels (channel_category_id)."
+        data_tests:
+          - not_null
+      - name: nightly_rate
+        description: "Reservation's daily_rate carried from staging (total_amount / num_nights, null-guarded)."
+      - name: num_guests
+        description: "Number of guests on the reservation. May be null (known source data quality gap)."
+      - name: num_nights
+        description: "Total nights on the reservation (not specific to this stay_date row)."
+        data_tests:
+          - not_null
+      - name: meal_plan
+        description: "Meal plan, standardized in staging."
+      - name: booking_channel
+        description: "Standardized channel label, joined from stg_channels."
+      - name: property_name
+        description: "Property display name, joined from stg_properties."
+      - name: country
+        description: "Property country, joined from stg_properties."
+      - name: room_type_name
+        description: "Room type label, joined from stg_room_types."
+      - name: stay_month
+        description: "First day of the month containing stay_date."
+        data_tests:
+          - not_null
+      - name: day_of_week
+        description: "Abbreviated day name for stay_date (e.g. Mon, Tue)."
+        data_tests:
+          - not_null
+      - name: is_weekend
+        description: "True when stay_date falls on Sat or Sun."
+        data_tests:
+          - not_null
+      - name: reservation_status
+        description: "Status carried through for mart-level filtering. Always CONFIRMED or NO_SHOW here (CANCELLED is filtered out above)."
+        data_tests:
+          - accepted_values:
+              values: ['CONFIRMED', 'NO_SHOW']
+
+  - name: int_property_capacity
+    description: >
+      Daily available room capacity per property x room type, net of
+      maintenance blocks. Grain: property_id + room_type_id + capacity_date.
+      Rolled up to the monthly grain by fct_capacity_monthly.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - property_id
+            - room_type_id
+            - capacity_date
+    columns:
+      - name: property_id
+        description: "Foreign key to stg_properties / dim_property."
+        data_tests:
+          - not_null
+      - name: property_name
+        description: "Property display name, joined from stg_properties."
+      - name: country
+        description: "Property country, joined from stg_properties."
+      - name: room_type_id
+        description: "Foreign key to stg_room_types."
+        data_tests:
+          - not_null
+      - name: room_type_name
+        description: "Room type label, joined from stg_room_types."
+      - name: capacity_date
+        description: "Calendar date this capacity row applies to."
+        data_tests:
+          - not_null
+      - name: room_count
+        description: "Total physical rooms of this type at this property (from stg_room_types)."
+        data_tests:
+          - not_null
+      - name: rooms_blocked
+        description: "Rooms of this type out of service on capacity_date due to maintenance. 0 when no block applies."
+        data_tests:
+          - not_null
+      - name: available_rooms
+        description: "room_count minus rooms_blocked, floored at 0 (rooms_blocked is capped at room_count)."
+        data_tests:
+          - not_null
