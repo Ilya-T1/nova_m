@@ -1,0 +1,232 @@
+version: 2
+
+models:
+  - name: dim_property
+    description: >
+      Conformed property dimension. One row per property, including
+      properties with zero reservations -- other facts (e.g.
+      fct_capacity_monthly) need to join every property regardless of
+      booking activity.
+    columns:
+      - name: property_id
+        description: "Primary key."
+        data_tests:
+          - not_null
+          - unique
+      - name: property_name
+        data_tests:
+          - not_null
+      - name: country
+        data_tests:
+          - not_null
+      - name: city
+        data_tests:
+          - not_null
+      - name: zip_code
+      - name: property_type
+        data_tests:
+          - not_null
+      - name: star_rating
+        data_tests:
+          - not_null
+      - name: total_rooms
+        data_tests:
+          - not_null
+      - name: seasonality
+        data_tests:
+          - not_null
+
+  - name: dim_date
+    description: >
+      Conformed calendar dimension. One row per calendar day, spanning the
+      full date range covered by int_property_capacity (the union of the
+      reservation and maintenance date ranges).
+    columns:
+      - name: date_day
+        description: "Primary key."
+        data_tests:
+          - not_null
+          - unique
+      - name: month_date
+        data_tests:
+          - not_null
+      - name: year
+        data_tests:
+          - not_null
+      - name: month
+        data_tests:
+          - not_null
+      - name: month_name
+        data_tests:
+          - not_null
+      - name: quarter
+        data_tests:
+          - not_null
+      - name: day_of_month
+        data_tests:
+          - not_null
+      - name: day_of_week
+        data_tests:
+          - not_null
+      - name: is_weekend
+        data_tests:
+          - not_null
+
+  - name: fct_reservation_nights
+    description: >
+      Presentation-layer copy of int_reservation_nights. One row per
+      non-cancelled reservation (CONFIRMED + NO_SHOW) x stay night. Join to
+      dim_property on property_id and dim_date on stay_date = date_day.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - reservation_id
+            - stay_date
+    columns:
+      - name: reservation_id
+        data_tests:
+          - not_null
+      - name: stay_date
+        data_tests:
+          - not_null
+      - name: property_id
+        description: "Foreign key to dim_property."
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_property')
+              field: property_id
+      - name: room_type_id
+        data_tests:
+          - not_null
+      - name: channel_id
+        data_tests:
+          - not_null
+      - name: nightly_rate
+      - name: num_guests
+      - name: num_nights
+        data_tests:
+          - not_null
+      - name: meal_plan
+      - name: booking_channel
+      - name: property_name
+      - name: country
+      - name: room_type_name
+      - name: stay_month
+        data_tests:
+          - not_null
+      - name: day_of_week
+        data_tests:
+          - not_null
+      - name: is_weekend
+        data_tests:
+          - not_null
+      - name: reservation_status
+        data_tests:
+          - accepted_values:
+              values: ['CONFIRMED', 'NO_SHOW']
+
+  - name: fct_capacity_monthly
+    description: >
+      Available room capacity per property x room_type x month, net of
+      maintenance blocks. Rolled up from int_property_capacity's daily
+      grain. Join to dim_property on property_id and dim_date on
+      month_date = date_trunc('month', date_day).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - property_id
+            - room_type_id
+            - month_date
+    columns:
+      - name: property_id
+        description: "Foreign key to dim_property."
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_property')
+              field: property_id
+      - name: property_name
+      - name: country
+      - name: room_type_id
+        data_tests:
+          - not_null
+      - name: room_type_name
+      - name: month_date
+        description: "First day of the month."
+        data_tests:
+          - not_null
+      - name: year
+        data_tests:
+          - not_null
+      - name: month
+        data_tests:
+          - not_null
+      - name: total_room_nights
+        description: "Sum of room_count across every day in the month (gross capacity, before maintenance)."
+        data_tests:
+          - not_null
+      - name: maintenance_room_nights
+        description: "Room-nights blocked by maintenance during the month."
+        data_tests:
+          - not_null
+      - name: available_room_nights
+        description: "total_room_nights minus maintenance_room_nights. Denominator for occupancy rate / RevPAR."
+        data_tests:
+          - not_null
+
+  - name: mart_cancellation
+    description: >
+      Cancelled reservations only, at reservation grain, sourced directly
+      from stg_reservations (bypasses the intermediate layer). Computing
+      cancellation_rate requires a total-reservations count from elsewhere
+      (e.g. combined with fct_reservation_nights' non-cancelled reservation
+      count).
+    columns:
+      - name: reservation_id
+        description: "Primary key."
+        data_tests:
+          - not_null
+          - unique
+      - name: property_id
+        description: "Foreign key to dim_property."
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_property')
+              field: property_id
+      - name: property_name
+      - name: country
+      - name: room_type_id
+        data_tests:
+          - not_null
+      - name: room_type_name
+      - name: channel_id
+        data_tests:
+          - not_null
+      - name: booking_channel
+      - name: booking_date
+        data_tests:
+          - not_null
+      - name: check_in_date
+        data_tests:
+          - not_null
+      - name: check_out_date
+        data_tests:
+          - not_null
+      - name: cancellation_date
+        description: "Date the reservation was cancelled."
+        data_tests:
+          - not_null
+      - name: lead_time_days
+      - name: cancellation_policy
+      - name: cancellation_deadline_days
+      - name: status
+        description: "Always CANCELLED in this mart."
+        data_tests:
+          - accepted_values:
+              values: ['CANCELLED']
+      - name: total_amount
+        description: "Reservation revenue that was cancelled (lost revenue)."
+        data_tests:
+          - not_null
