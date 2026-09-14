@@ -1,0 +1,30 @@
+version: 2
+
+sources:
+  - name: nm_raw
+    description: "Raw data from source systems loaded into Snowflake"
+
+    database: DBT_LEARN_ILYA
+    schema: NM_RAW
+
+    tables:
+      - name: raw_channels
+        description: "Distribution channel categories "
+
+      - name: raw_properties
+        description: "Property master data"
+
+      - name: raw_room_types
+        description: "Room type definitions per property"
+
+      - name: raw_maintenance
+        description: "Maintenance blocks recording rooms taken out of service"
+
+      - name: raw_reservations
+        description: "Rooms reservation records "
+        columns:
+          - name: reservation_id
+            description: "Primary key for reservations."
+            tests:
+              - not_null
+              - unique
