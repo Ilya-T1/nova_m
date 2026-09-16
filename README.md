@@ -7,8 +7,7 @@ A dbt project targeting Snowflake.
 ```
 models/
   staging/
-    nm_raw/
-      _nm_raw__sources.yml       # source table declarations (DBT_LEARN_ILYA.NM_RAW)
+    _nm_raw__sources.yml         # source table declarations (DBT_LEARN_ILYA.NM_RAW)
     _staging__models.yml         # docs/tests for all staging models below
     stg_channels.sql
     stg_properties.sql

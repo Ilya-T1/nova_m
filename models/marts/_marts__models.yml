@@ -79,9 +79,10 @@ models:
       dim_property on property_id and dim_date on stay_date = date_day.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - reservation_id
-            - stay_date
+          arguments:
+            combination_of_columns:
+              - reservation_id
+              - stay_date
     columns:
       - name: reservation_id
         data_tests:
@@ -94,8 +95,9 @@ models:
         data_tests:
           - not_null
           - relationships:
-              to: ref('dim_property')
-              field: property_id
+              arguments:
+                to: ref('dim_property')
+                field: property_id
       - name: room_type_id
         data_tests:
           - not_null
@@ -124,7 +126,8 @@ models:
       - name: reservation_status
         data_tests:
           - accepted_values:
-              values: ['CONFIRMED', 'NO_SHOW']
+              arguments:
+                values: ['CONFIRMED', 'NO_SHOW']
 
   - name: fct_capacity_monthly
     description: >
@@ -134,18 +137,20 @@ models:
       month_date = date_trunc('month', date_day).
     data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - property_id
-            - room_type_id
-            - month_date
+          arguments:
+            combination_of_columns:
+              - property_id
+              - room_type_id
+              - month_date
     columns:
       - name: property_id
         description: "Foreign key to dim_property."
         data_tests:
           - not_null
           - relationships:
-              to: ref('dim_property')
-              field: property_id
+              arguments:
+                to: ref('dim_property')
+                field: property_id
       - name: property_name
       - name: country
       - name: room_type_id
@@ -193,8 +198,9 @@ models:
         data_tests:
           - not_null
           - relationships:
-              to: ref('dim_property')
-              field: property_id
+              arguments:
+                to: ref('dim_property')
+                field: property_id
       - name: property_name
       - name: country
       - name: room_type_id
@@ -225,7 +231,8 @@ models:
         description: "Always CANCELLED in this mart."
         data_tests:
           - accepted_values:
-              values: ['CANCELLED']
+              arguments:
+                values: ['CANCELLED']
       - name: total_amount
         description: "Reservation revenue that was cancelled (lost revenue)."
         data_tests:

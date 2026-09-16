@@ -21,7 +21,8 @@ models:
         data_tests:
           - not_null
           - accepted_values:
-              values: ['Direct', 'OTA', 'Tour Operator', 'Corporate']
+              arguments:
+                values: ['Direct', 'OTA', 'Tour Operator', 'Corporate']
 
   - name: stg_properties
     description: >
@@ -43,7 +44,8 @@ models:
         data_tests:
           - not_null
           - accepted_values:
-              values: ['AUSTRIA', 'ITALY', 'SLOVENIA']
+              arguments:
+                values: ['AUSTRIA', 'ITALY', 'SLOVENIA']
       - name: city
         description: "City name standardized to title case."
         data_tests:
@@ -55,7 +57,8 @@ models:
         data_tests:
           - not_null
           - accepted_values:
-              values: ['Hotel', 'Apartments', 'Resort']
+              arguments:
+                values: ['Hotel', 'Apartments', 'Resort']
       - name: star_rating
         description: "Official star rating. Resorts are 5-star; Hotels and Apartments are 4-star."
         data_tests:
@@ -71,7 +74,8 @@ models:
         data_tests:
           - not_null
           - accepted_values:
-              values: ['Apr-Oct', 'All']
+              arguments:
+                values: ['Apr-Oct', 'All']
 
   - name: stg_room_types
     description: >
@@ -88,8 +92,9 @@ models:
         data_tests:
           - not_null
           - relationships:
-              to: ref('stg_properties')
-              field: property_id
+              arguments:
+                to: ref('stg_properties')
+                field: property_id
       - name: room_type_name
         description: "Room type label standardized to title case."
         data_tests:
@@ -120,15 +125,17 @@ models:
         data_tests:
           - not_null
           - relationships:
-              to: ref('stg_properties')
-              field: property_id
+              arguments:
+                to: ref('stg_properties')
+                field: property_id
       - name: room_type_id
         description: "Foreign key to stg_room_types."
         data_tests:
           - not_null
           - relationships:
-              to: ref('stg_room_types')
-              field: room_type_id
+              arguments:
+                to: ref('stg_room_types')
+                field: room_type_id
       - name: start_date
         description: "First date of the maintenance block, inclusive."
         data_tests:
@@ -161,22 +168,25 @@ models:
         data_tests:
           - not_null
           - relationships:
-              to: ref('stg_properties')
-              field: property_id
+              arguments:
+                to: ref('stg_properties')
+                field: property_id
       - name: room_type_id
         description: "Foreign key to stg_room_types."
         data_tests:
           - not_null
           - relationships:
-              to: ref('stg_room_types')
-              field: room_type_id
+              arguments:
+                to: ref('stg_room_types')
+                field: room_type_id
       - name: channel_category_id
         description: "Foreign key to stg_channels."
         data_tests:
           - not_null
           - relationships:
-              to: ref('stg_channels')
-              field: channel_category_id
+              arguments:
+                to: ref('stg_channels')
+                field: channel_category_id
       - name: booking_date
         description: "Date the reservation was made."
         data_tests:
@@ -218,7 +228,8 @@ models:
         data_tests:
           - not_null
           - accepted_values:
-              values: ['CONFIRMED', 'CANCELLED', 'NO_SHOW']
+              arguments:
+                values: ['CONFIRMED', 'CANCELLED', 'NO_SHOW']
       - name: is_cancelled
         description: "Derived boolean: true when status = CANCELLED."
       - name: total_amount

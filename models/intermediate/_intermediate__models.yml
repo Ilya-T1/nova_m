@@ -9,9 +9,10 @@ models:
       mart_cancellation from stg_reservations.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - reservation_id
-            - stay_date
+          arguments:
+            combination_of_columns:
+              - reservation_id
+              - stay_date
     columns:
       - name: reservation_id
         description: "Reservation this stay night belongs to. Not unique alone -- see the composite grain test above."
@@ -67,7 +68,8 @@ models:
         description: "Status carried through for mart-level filtering. Always CONFIRMED or NO_SHOW here (CANCELLED is filtered out above)."
         data_tests:
           - accepted_values:
-              values: ['CONFIRMED', 'NO_SHOW']
+              arguments:
+                values: ['CONFIRMED', 'NO_SHOW']
 
   - name: int_property_capacity
     description: >
@@ -76,10 +78,11 @@ models:
       Rolled up to the monthly grain by fct_capacity_monthly.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - property_id
-            - room_type_id
-            - capacity_date
+          arguments:
+            combination_of_columns:
+              - property_id
+              - room_type_id
+              - capacity_date
     columns:
       - name: property_id
         description: "Foreign key to stg_properties / dim_property."

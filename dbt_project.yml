@@ -43,6 +43,6 @@ models:
       +materialized: table
       +schema: marts
 
-seeds:
-  nova_m:
-    +schema: seeds
+# No seeds/ config yet -- seeds/ is currently empty. Add a
+# `seeds: nova_m: +schema: seeds` block back once a real seed file exists;
+# an empty config path here trips dbt's UnusedResourceConfigPath warning.
