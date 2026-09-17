@@ -9,7 +9,7 @@ with reservations as (
 
     select *
     from {{ ref('stg_reservations') }}
-    where not is_cancelled  -- keeps CONFIRMED + NO_SHOW, drops CANCELLED
+    where not is_cancelled  -- keeps Confirmed + No_Show, drops Cancelled
 
 ),
 

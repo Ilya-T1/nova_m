@@ -75,7 +75,7 @@ models:
   - name: fct_reservation_nights
     description: >
       Presentation-layer copy of int_reservation_nights. One row per
-      non-cancelled reservation (CONFIRMED + NO_SHOW) x stay night. Join to
+      non-cancelled reservation (Confirmed + No_Show) x stay night. Join to
       dim_property on property_id and dim_date on stay_date = date_day.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
@@ -127,7 +127,7 @@ models:
         data_tests:
           - accepted_values:
               arguments:
-                values: ['CONFIRMED', 'NO_SHOW']
+                values: ['Confirmed', 'No_Show']
 
   - name: fct_capacity_monthly
     description: >
@@ -228,11 +228,11 @@ models:
       - name: cancellation_policy
       - name: cancellation_deadline_days
       - name: status
-        description: "Always CANCELLED in this mart."
+        description: "Always Cancelled in this mart."
         data_tests:
           - accepted_values:
               arguments:
-                values: ['CANCELLED']
+                values: ['Cancelled']
       - name: total_amount
         description: "Reservation revenue that was cancelled (lost revenue)."
         data_tests:
