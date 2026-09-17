@@ -42,6 +42,8 @@ models:
         description: "Total nights on the reservation (not specific to this stay_date row)."
         data_tests:
           - not_null
+      - name: lead_time_days
+        description: "Days between booking_date and check_in_date, carried from staging (not specific to this stay_date row)."
       - name: meal_plan
         description: "Meal plan, standardized in staging."
       - name: booking_channel
