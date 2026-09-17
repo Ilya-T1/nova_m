@@ -19,30 +19,15 @@ maintenance as (
 
 ),
 
-date_bounds as (
-
-    select min(check_in_date) as start_date, max(check_out_date) as end_date
-    from {{ ref('stg_reservations') }}
-
-    union all
-
-    select min(start_date), max(end_date)
-    from maintenance
-
-),
-
-spine_range as (
-
-    select min(start_date) as spine_start, max(end_date) as spine_end
-    from date_bounds
-
-),
-
+-- date_spine's start_date/end_date must reference real relations via ref()
+-- -- an earlier CTE name isn't resolvable inside the macro's generated SQL.
+-- Bounds are the union of the reservation and maintenance date ranges,
+-- computed inline as scalar subqueries against the actual staging tables.
 date_spine as (
     {{ dbt_utils.date_spine(
         datepart="day",
-        start_date="(select spine_start from spine_range)",
-        end_date="(select spine_end from spine_range)"
+        start_date="(select least((select min(check_in_date) from " ~ ref('stg_reservations') ~ "), (select min(start_date) from " ~ ref('stg_maintenance') ~ ")))",
+        end_date="(select greatest((select max(check_out_date) from " ~ ref('stg_reservations') ~ "), (select max(end_date) from " ~ ref('stg_maintenance') ~ ")))"
     ) }}
 ),
 
