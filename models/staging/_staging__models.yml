@@ -211,6 +211,12 @@ models:
         description: >
           Derived: DATEDIFF(check_in_date, booking_date).
           Days between booking and arrival. Key metric for booking pattern analysis.
+          Should never be negative (booking after check-in would be bad data).
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
       - name: num_guests
         description: "Number of guests. May be null — deliberate data quality issue in source."
       - name: meal_plan
