@@ -96,7 +96,12 @@ models:
                 to: ref('stg_properties')
                 field: property_id
       - name: room_type_name
-        description: "Room type label standardized to title case."
+        description: >
+          Room type label, standardized to a canonical name so the same real
+          room type reads the same across properties (Standard/Double ->
+          'Double Standard'; Superior/Premium -> 'Double Superior'). Other
+          raw values pass through Capitalized, unconstrained -- no
+          accepted_values test since new room types may legitimately appear.
         data_tests:
           - not_null
       - name: max_occupancy
