@@ -74,9 +74,12 @@ models:
 
   - name: fct_reservation_nights
     description: >
-      Presentation-layer copy of int_reservation_nights. One row per
-      non-cancelled reservation (Confirmed + No_Show) x stay night. Join to
-      dim_property on property_id and dim_date on stay_date = date_day.
+      Non-cancelled reservations (Confirmed + No_Show) exploded to one row
+      per stay night, enriched beyond int_reservation_nights with
+      arrival/departure flags, a peak-season flag (needs dim_property, so
+      it's computed here), a friendly weekday/weekend label, and lead-time
+      bucketing. Join to dim_property on property_id and dim_date on
+      stay_date = date_day.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
@@ -104,11 +107,24 @@ models:
       - name: channel_id
         data_tests:
           - not_null
-      - name: nightly_rate
+      - name: nightly_revenue
+        description: >
+          Renamed from int_reservation_nights.nightly_rate and rounded to 2
+          decimals. This is total_amount allocated evenly across nights --
+          additive (SUM gives the reservation's total_amount back), not a
+          price/ADR metric that should be averaged.
       - name: num_guests
       - name: num_nights
         data_tests:
           - not_null
+      - name: lead_time_days
+        description: "Days between booking_date and check_in_date (not specific to this stay_date row)."
+      - name: lead_time_bucket
+        description: "lead_time_days bucketed for booking-pattern segmentation."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['0-7 days', '8-30 days', '31-90 days', '90+ days']
       - name: meal_plan
       - name: booking_channel
       - name: property_name
@@ -121,6 +137,27 @@ models:
         data_tests:
           - not_null
       - name: is_weekend
+        data_tests:
+          - not_null
+      - name: day_type
+        description: "Friendly label for is_weekend: 'Weekend' or 'Weekday'."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Weekend', 'Weekday']
+      - name: is_arrival_night
+        description: "True when stay_date is the first stay night of the reservation."
+        data_tests:
+          - not_null
+      - name: is_departure_night
+        description: "True when stay_date is the last stay night of the reservation."
+        data_tests:
+          - not_null
+      - name: is_peak_season
+        description: >
+          True when the property is year-round (seasonality = 'All'), or
+          when it's a seasonal (Apr-Oct) property and stay_date falls within
+          that window.
         data_tests:
           - not_null
       - name: reservation_status

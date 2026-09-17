@@ -36,6 +36,7 @@ nights as (
         r.daily_rate                as nightly_rate,
         r.num_guests,
         r.nights_stayed            as num_nights,
+        r.lead_time_days,
         r.meal_plan,
         r.status                   as reservation_status
 
@@ -57,6 +58,7 @@ enriched as (
         n.nightly_rate,
         n.num_guests,
         n.num_nights,
+        n.lead_time_days,
         n.meal_plan,
         ch.channel_category        as booking_channel,
         p.property_name,
