@@ -40,12 +40,12 @@ models:
           - not_null
           - unique
       - name: country
-        description: "Country standardized to uppercase."
+        description: "Country standardized to Capitalized case."
         data_tests:
           - not_null
           - accepted_values:
               arguments:
-                values: ['AUSTRIA', 'ITALY', 'SLOVENIA']
+                values: ['Austria', 'Italy', 'Slovenia']
       - name: city
         description: "City name standardized to title case."
         data_tests:
@@ -214,24 +214,36 @@ models:
       - name: num_guests
         description: "Number of guests. May be null — deliberate data quality issue in source."
       - name: meal_plan
-        description: "Meal plan standardized to title case."
+        description: >
+          Meal plan as an uppercase abbreviation code (BB/HB/FB/AI/SC), not a
+          descriptive label -- kept uppercase per convention, unlike other
+          string columns which are Capitalized. Null in source becomes 'SC'.
+          Mapping assumes standard hospitality terms; verify against actual
+          raw values.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['BB', 'HB', 'FB', 'AI', 'SC']
       - name: has_breakfast
-        description: "Derived boolean: true when meal_plan contains 'Breakfast'."
+        description: "Derived boolean: true when meal_plan is BB, FB, or AI."
       - name: cancellation_policy
         description: "Cancellation policy standardized to title case."
       - name: cancellation_deadline_days
         description: "Days before check-in within which cancellation is penalty-free."
       - name: status
         description: >
-          Reservation status standardized to uppercase.
-          NS abbreviation (~30% of No Show rows in source) decoded to NO_SHOW in staging.
+          Reservation status standardized to Capitalized case.
+          NS/NO SHOW abbreviations (~30% of No Show rows in source) decoded
+          to No_Show in staging. Any unrecognized raw value passes through
+          untransformed (see the accepted_values test below).
         data_tests:
           - not_null
           - accepted_values:
               arguments:
-                values: ['CONFIRMED', 'CANCELLED', 'NO_SHOW']
+                values: ['Confirmed', 'Cancelled', 'No_Show']
       - name: is_cancelled
-        description: "Derived boolean: true when status = CANCELLED."
+        description: "Derived boolean: true when the raw source status is a cancellation (before Capitalization)."
       - name: total_amount
         description: "Total reservation revenue in EUR."
         data_tests:

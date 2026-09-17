@@ -11,7 +11,7 @@ cleaned as (
             || ' '
             || initcap(trim(property_type))     as property_name,
 
-        upper(trim(country))                    as country,
+        initcap(trim(country))                  as country,
         initcap(trim(city))                     as city,
         cast(zip_code as varchar(10))           as zip_code,
         initcap(trim(property_type))            as property_type,

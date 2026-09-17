@@ -3,7 +3,7 @@ version: 2
 models:
   - name: int_reservation_nights
     description: >
-      Non-cancelled reservations (CONFIRMED + NO_SHOW) exploded to one row
+      Non-cancelled reservations (Confirmed + No_Show) exploded to one row
       per stay night, enriched with property/room type/channel descriptors.
       Cancelled reservations are excluded here and handled directly by
       mart_cancellation from stg_reservations.
@@ -65,11 +65,11 @@ models:
         data_tests:
           - not_null
       - name: reservation_status
-        description: "Status carried through for mart-level filtering. Always CONFIRMED or NO_SHOW here (CANCELLED is filtered out above)."
+        description: "Status carried through for mart-level filtering. Always Confirmed or No_Show here (Cancelled is filtered out above)."
         data_tests:
           - accepted_values:
               arguments:
-                values: ['CONFIRMED', 'NO_SHOW']
+                values: ['Confirmed', 'No_Show']
 
   - name: int_property_capacity
     description: >
