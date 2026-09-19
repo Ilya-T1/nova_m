@@ -2,8 +2,9 @@ version: 2
 
 # TODO: once thresholds are agreed, add dbt_expectations range checks
 # (expect_column_values_to_be_between) on the derived numeric columns below:
-# stg_reservations: nights_stayed, lead_time_days, total_amount, daily_rate
+# stg_reservations: total_amount, daily_rate
 # stg_properties: star_rating, total_rooms
+# (nights_stayed and lead_time_days already covered)
 
 models:
   - name: stg_channels
@@ -210,8 +211,13 @@ models:
         description: >
           Derived: DATEDIFF(check_out_date, check_in_date).
           Calculated from dates rather than a stored column for reliability.
+          Should never be less than 1 (check_out_date <= check_in_date would
+          be bad data).
         data_tests:
           - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
       - name: lead_time_days
         description: >
           Derived: DATEDIFF(check_in_date, booking_date).
