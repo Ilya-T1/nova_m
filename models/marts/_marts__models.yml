@@ -217,9 +217,7 @@ models:
         data_tests:
           - not_null
       - name: pct_rooms_blocked
-        description: "rooms_blocked / room_count. 0 when room_count is 0 (via DIV0)."
-        data_tests:
-          - not_null
+        description: "rooms_blocked / room_count. NULL (not 0) when room_count is 0, via dbt_utils.safe_divide."
       - name: day_of_week
         data_tests:
           - not_null
