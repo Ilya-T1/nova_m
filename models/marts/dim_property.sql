@@ -1,6 +1,6 @@
 -- Conformed property dimension. Sourced directly from stg_properties (not
 -- from int_reservation_nights) so that every property appears here even if
--- it currently has zero reservations -- fct_capacity_monthly and other
+-- it currently has zero reservations -- fct_capacity_daily and other
 -- future facts need to be able to join every property, not just booked ones.
 
 select

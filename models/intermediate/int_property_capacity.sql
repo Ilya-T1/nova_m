@@ -1,7 +1,8 @@
 -- Daily available-room capacity per property x room type, net of maintenance
 -- blocks. Grain: one row per property_id + room_type_id + capacity_date.
--- fct_capacity_monthly rolls this up to the monthly grain used for
--- occupancy/RevPAR.
+-- fct_capacity_daily enriches this at the same daily grain -- weekly and
+-- monthly rollups happen in Tableau via dim_date, not by pre-aggregating
+-- here.
 --
 -- rooms_blocked is capped at room_count so available_rooms never goes
 -- negative, even if overlapping maintenance blocks over-report blocked rooms

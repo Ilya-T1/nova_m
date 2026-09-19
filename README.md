@@ -23,7 +23,7 @@ models/
     dim_property.sql             # conformed property dimension
     dim_date.sql                 # conformed calendar dimension
     fct_reservation_nights.sql   # pass-through of int_reservation_nights
-    fct_capacity_monthly.sql     # int_property_capacity rolled up to property x room_type x month
+    fct_capacity_daily.sql       # int_property_capacity enriched, kept at daily grain
     mart_cancellation.sql        # cancelled reservations only, reservation grain
 ```
 
@@ -39,7 +39,7 @@ models/
 `nm_raw` is the real source (raw_channels, raw_properties, raw_room_types,
 raw_maintenance, raw_reservations). The mart layer is designed for Tableau
 to connect to via **Relationships** (not classic data blending), joining
-`fct_reservation_nights` and `fct_capacity_monthly` through the conformed
+`fct_reservation_nights` and `fct_capacity_daily` through the conformed
 `dim_property`/`dim_date` dimensions to compute occupancy rate and revenue
 per room. `mart_cancellation` holds only cancelled reservations — computing
 cancellation rate needs a total-reservations count from elsewhere (e.g.

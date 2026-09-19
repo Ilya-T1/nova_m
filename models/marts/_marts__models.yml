@@ -5,7 +5,7 @@ models:
     description: >
       Conformed property dimension. One row per property, including
       properties with zero reservations -- other facts (e.g.
-      fct_capacity_monthly) need to join every property regardless of
+      fct_capacity_daily) need to join every property regardless of
       booking activity.
     columns:
       - name: property_id
@@ -47,6 +47,10 @@ models:
         data_tests:
           - not_null
           - unique
+      - name: week_start_date
+        description: "Monday of the week containing date_day (DATE_TRUNC('week', ...)). Use this for weekly rollups, not a numbered ISO week."
+        data_tests:
+          - not_null
       - name: month_date
         data_tests:
           - not_null
@@ -166,19 +170,21 @@ models:
               arguments:
                 values: ['Confirmed', 'No_Show']
 
-  - name: fct_capacity_monthly
+  - name: fct_capacity_daily
     description: >
-      Available room capacity per property x room_type x month, net of
-      maintenance blocks. Rolled up from int_property_capacity's daily
-      grain. Join to dim_property on property_id and dim_date on
-      month_date = date_trunc('month', date_day).
+      Daily available room capacity per property x room_type, net of
+      maintenance blocks, enriched beyond int_property_capacity. Kept at
+      daily grain (not pre-aggregated) so weekly and monthly capacity
+      analysis are both possible -- roll up in Tableau via dim_date's
+      week_start_date / month_date, not in this model. Join to dim_property
+      on property_id and dim_date on capacity_date = date_day.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:
               - property_id
               - room_type_id
-              - month_date
+              - capacity_date
     columns:
       - name: property_id
         description: "Foreign key to dim_property."
@@ -194,26 +200,43 @@ models:
         data_tests:
           - not_null
       - name: room_type_name
-      - name: month_date
-        description: "First day of the month."
+      - name: capacity_date
+        description: "Foreign key to dim_date."
         data_tests:
           - not_null
-      - name: year
+      - name: room_count
+        description: "Total physical rooms of this type at this property."
         data_tests:
           - not_null
-      - name: month
+      - name: rooms_blocked
+        description: "Rooms blocked by maintenance on this date. 0 when no block applies."
         data_tests:
           - not_null
-      - name: total_room_nights
-        description: "Sum of room_count across every day in the month (gross capacity, before maintenance)."
+      - name: available_rooms
+        description: "room_count minus rooms_blocked. Denominator for occupancy rate / RevPAR."
         data_tests:
           - not_null
-      - name: maintenance_room_nights
-        description: "Room-nights blocked by maintenance during the month."
+      - name: pct_rooms_blocked
+        description: "rooms_blocked / room_count. 0 when room_count is 0 (via DIV0)."
         data_tests:
           - not_null
-      - name: available_room_nights
-        description: "total_room_nights minus maintenance_room_nights. Denominator for occupancy rate / RevPAR."
+      - name: day_of_week
+        data_tests:
+          - not_null
+      - name: is_weekend
+        data_tests:
+          - not_null
+      - name: day_type
+        description: "Friendly label for is_weekend: 'Weekend' or 'Weekday'."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Weekend', 'Weekday']
+      - name: is_peak_season
+        description: >
+          True when the property is year-round (seasonality = 'All'), or
+          when it's a seasonal (Apr-Oct) property and capacity_date falls
+          within that window. Same logic as fct_reservation_nights.
         data_tests:
           - not_null
 
