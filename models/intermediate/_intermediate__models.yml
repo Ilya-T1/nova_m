@@ -77,7 +77,7 @@ models:
     description: >
       Daily available room capacity per property x room type, net of
       maintenance blocks. Grain: property_id + room_type_id + capacity_date.
-      Rolled up to the monthly grain by fct_capacity_monthly.
+      Enriched (not re-aggregated) by fct_capacity_daily.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
