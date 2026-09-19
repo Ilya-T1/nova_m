@@ -25,7 +25,8 @@ select
 
     -- Share of inventory blocked by maintenance -- purely a ratio of this
     -- table's own columns, so it belongs here rather than as a BI calc.
-    div0(d.rooms_blocked, d.room_count)                          as pct_rooms_blocked,
+    -- NULL (not 0) when room_count is 0, via dbt_utils.safe_divide.
+    {{ dbt_utils.safe_divide('d.rooms_blocked', 'd.room_count') }}         as pct_rooms_blocked,
 
     dayname(d.capacity_date)                                     as day_of_week,
     dayname(d.capacity_date) in ('Sat', 'Sun')                   as is_weekend,
@@ -34,14 +35,7 @@ select
         else 'Weekday'
     end                                                           as day_type,
 
-    -- Same peak-season logic as fct_reservation_nights: year-round
-    -- properties are always peak; Alpine (Apr-Oct) properties only within
-    -- that window.
-    case
-        when p.seasonality = 'All' then true
-        when p.seasonality = 'Apr-Oct' and month(d.capacity_date) between 4 and 10 then true
-        else false
-    end                                                           as is_peak_season
+    {{ is_peak_season('p.seasonality', 'd.capacity_date') }}                as is_peak_season
 
 from daily d
 left join {{ ref('dim_property') }} p on p.property_id = d.property_id

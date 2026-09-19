@@ -52,14 +52,7 @@ enriched as (
         n.stay_date = min(n.stay_date) over (partition by n.reservation_id) as is_arrival_night,
         n.stay_date = max(n.stay_date) over (partition by n.reservation_id) as is_departure_night,
 
-        -- Peak season: property's seasonality (dim_property) combined with
-        -- the stay's month. Alpine properties (Apr-Oct) are only "peak"
-        -- within that window; year-round properties are always peak.
-        case
-            when p.seasonality = 'All' then true
-            when p.seasonality = 'Apr-Oct' and month(n.stay_date) between 4 and 10 then true
-            else false
-        end                                                                 as is_peak_season,
+        {{ is_peak_season('p.seasonality', 'n.stay_date') }}                as is_peak_season,
 
         n.reservation_status
 

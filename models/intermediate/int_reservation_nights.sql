@@ -13,15 +13,14 @@ with reservations as (
 
 ),
 
--- date_spine's start_date/end_date must reference a real relation via ref()
--- -- an earlier CTE name (e.g. "reservations") isn't resolvable inside the
--- macro's generated SQL. Bounds are computed from the full stg_reservations
--- table (unfiltered), which is a superset of the filtered range anyway.
+-- Bounds computed from the full stg_reservations table (unfiltered), which
+-- is a superset of the filtered range above. See macros/date_spine_bound.sql
+-- for why this can't just reference the "reservations" CTE by name.
 date_spine as (
     {{ dbt_utils.date_spine(
         datepart="day",
-        start_date="(select min(check_in_date) from " ~ ref('stg_reservations') ~ ")",
-        end_date="(select max(check_out_date) from " ~ ref('stg_reservations') ~ ")"
+        start_date=date_spine_bound('min', ref('stg_reservations'), 'check_in_date'),
+        end_date=date_spine_bound('max', ref('stg_reservations'), 'check_out_date')
     ) }}
 ),
 
