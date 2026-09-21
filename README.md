@@ -88,3 +88,8 @@ dbt docs generate && dbt docs serve   # browse the lineage graph & docs
   key column.
 - `dbt_project.yml` sets folder-level materialization defaults so individual
   models rarely need a `{{ config(...) }}` block.
+- `tests/` holds singular tests: custom SQL files (one `assert_*.sql` per
+  file) for cross-model/cross-row invariants that a generic column test
+  (`not_null`, `accepted_values`, etc.) can't express -- e.g. reconciling
+  row counts or sums across two related models. A singular test passes when
+  its query returns zero rows.
